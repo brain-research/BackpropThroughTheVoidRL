@@ -129,11 +129,12 @@ class Model(object):
             return policy_loss, value_loss
           
         def get_grads(obs, old_actions, advs, rewards, vf_in, value):
+            advs = rewards - value
             td_map = {
                 train_model.ob_no:obs, train_model.oldac_na:old_actions, train_model.X:vf_in,
                 A: old_actions, ADV:advs, R:rewards
             }
-            _g = all_policy_grads / tf.to_float(tf.shape(rewards)[0])
+            _g = all_policy_grads # seems to already have happened? / tf.to_float(tf.shape(rewards)[0])
             pg = sess.run(
                 _g,
                 td_map
@@ -289,8 +290,8 @@ def learn(env, policy, seed, total_timesteps=int(10e6),
                     pgs.append(pg)
                 pgs = np.array(pg)
                 pgv = np.var(pgs, axis=0)
-                lpgv = np.log(pgv)
-                lpgv = np.mean(lpgv)
+                lpgv = np.mean(pgv)
+                lpgv = np.log(lpgv)
                 logger.record_tabular("log_variance", lpgv)
 
         # Collect paths until we have enough timesteps
